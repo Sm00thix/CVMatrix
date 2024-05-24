@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cvmatrix"
+version = "1.0.0"
+description = ""
+authors = ["Sm00thix <oleemail@icloud.com>"]
+maintainers = ["Sm00thix <oleemail@icloud.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://cvmatrix.readthedocs.io/en/latest/"
+repository = "https://github.com/Sm00thix/CVMatrix"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <3.13"
+numpy = "^1.26.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
