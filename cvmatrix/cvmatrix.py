@@ -19,10 +19,6 @@ class CVMatrix:
     X : Array-like of shape (N, K) or (N,)
         Predictor variables.
     
-    cv_splits : Iterable of Hashable with N elements
-        An iterable defining cross-validation splits. Each unique value in `cv_splits`
-        corresponds to a different fold.
-    
     Y : None or array-like of shape (N, M) or (N,), optional, default=None
         Response variables. If `None`, only :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
         will be computed and :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` will not be
@@ -72,9 +68,6 @@ class CVMatrix:
 
     def __init__(
         self,
-        X: npt.ArrayLike,
-        cv_splits: Iterable[Hashable],
-        Y: Union[None, npt.ArrayLike] = None,
         center_X: bool = True,
         center_Y: bool = True,
         scale_X: bool = True,
@@ -102,6 +95,24 @@ class CVMatrix:
         self.sum_Y_total = None
         self.sum_sq_X_total = None
         self.sum_sq_Y_total = None
+
+    def fit(self, X: npt.ArrayLike, Y: Union[None, npt.ArrayLike] = None) -> None:
+        """
+        Loads and stores `X` and `Y` for cross-validation. Computes dataset-wide
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and, if `Y` is not `None`,
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`. If `center_X`, `center_Y`,
+        `scale_X`, or `scale_Y` is `True`, the corresponding global statistics are also
+        computed.
+
+        Parameters
+        ----------
+        X : Array-like of shape (N, K) or (N,)
+            Predictor variables.
+        
+        Y : None or array-like of shape (N, M) or (N,), optional, default=None
+            Response variables. If `None`, subsequent calls to training_XTY and
+            training_XTX_XTY will raise a `ValueError`.
+        """
         self.X_total = self._init_mat(X)
         self.N, self.K = self.X_total.shape
         self.XTX_total = self.X_total.T @ self.X_total
@@ -109,14 +120,103 @@ class CVMatrix:
             self.Y_total = self._init_mat(Y)
             self.M = self.Y_total.shape[1]
             self.XTY_total = self.X_total.T @ self.Y_total
-        self._init_val_indices_dict(cv_splits)
         self._init_total_stats()
 
-    def training_matrices(
+    def load_cv_splits(self, cv_splits: Iterable[Hashable]) -> None:
+        """
+        Loads new cross-validation splits.
+
+        Parameters
+        ----------
+        cv_splits : Iterable of Hashable with N elements
+            An iterable defining cross-validation splits. Each unique value in
+            `cv_splits` corresponds to a different fold.
+        """
+        self._init_val_indices_dict(cv_splits)
+
+    def training_XTX(self, val_idx: Hashable) -> np.ndarray:
+        """
+        Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` for a given
+        fold.
+
+        Parameters
+        ----------
+        val_idx : Hashable
+            The validation fold for which to return the corresponding training set
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`.
+
+        Returns
+        -------
+        Array of shape (K, K)
+            The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`.
+
+        Raises
+        ------
+
+        See Also
+        --------
+        training_XTX_XTY : Returns the training set
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold. This method is
+        faster than calling `training_XTX` and `training_XTY` separately.
+        """
+        return self._training_matrices(True, False, val_idx)
+
+    def training_XTY(self, val_idx: Hashable) -> np.ndarray:
+        """
+        Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given
+        fold.
+
+        Parameters
+        ----------
+        val_idx : Hashable
+            The validation fold for which to return the corresponding training set
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+
+        Returns
+        -------
+        Array of shape (K, M)
+            The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+
+        Raises
+        ------
+        ValueError
+            If `Y` is `None`.
+
+        See Also
+        --------
+        training_XTX_XTY : Returns the training set
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold. This method is
+        faster than calling `training_XTX` and `training_XTY` separately.
+        """
+        return self._training_matrices(False, True, val_idx)
+
+    def training_XTX_XTY(self, val_idx: Hashable) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold.
+
+        Parameters
+        ----------
+        val_idx : Hashable
+            The validation fold for which to return the corresponding training set
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+
+        Returns
+        -------
+        tuple of arrays of shapes (K, K) and (K, M)
+            The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+        """
+        return self._training_matrices(True, True, val_idx)
+
+    def _training_matrices(
             self,
             return_XTX: bool,
-            val_idx: Hashable,
-            return_XTY: bool = False
+            return_XTY: bool,
+            val_idx: Hashable
     ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and/or
