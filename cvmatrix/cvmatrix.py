@@ -115,8 +115,8 @@ class CVMatrix:
     def training_matrices(
             self,
             return_XTX: bool,
-            return_XTY: bool,
-            val_idx: Hashable
+            val_idx: Hashable,
+            return_XTY: bool = False
     ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and/or
@@ -127,13 +127,15 @@ class CVMatrix:
         return_XTX : bool
             Whether to return the training set
             :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`.
-        return_XTY : bool
-            Whether to return the training set
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+
         val_idx : Hashable
             The validation fold for which to return the corresponding training set
             :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
             :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`
+
+        return_XTY : bool, optional, default=False
+            Whether to return the training set
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
 
         Returns
         -------
