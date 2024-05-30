@@ -1,0 +1,3 @@
+cvmatrix
+sphinx-rtd-theme
+myst-parser

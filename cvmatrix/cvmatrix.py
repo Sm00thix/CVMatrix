@@ -102,10 +102,13 @@ class CVMatrix:
         self.sum_Y_total = None
         self.sum_sq_X_total = None
         self.sum_sq_Y_total = None
-        self._init_X_total(X)
-        self._init_Y_total(Y)
-        self._init_XTX_total()
-        self._init_XTY_total()
+        self.X_total = self._init_mat(X)
+        self.N, self.K = self.X_total.shape
+        self.XTX_total = self.X_total.T @ self.X_total
+        if Y is not None:
+            self.Y_total = self._init_mat(Y)
+            self.M = self.Y_total.shape[1]
+            self.XTY_total = self.X_total.T @ self.Y_total
         self._init_val_indices_dict(cv_splits)
         self._init_total_stats()
 
@@ -116,7 +119,7 @@ class CVMatrix:
             val_idx: Hashable
     ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """
-        Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+        Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and/or
         :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold.
 
         Parameters
@@ -144,6 +147,11 @@ class CVMatrix:
             If both `return_XTX` and `return_XTY` are `False` or if `return_XTY` is
             `True` and `Y` is `None`.
         """
+        X_train_mean = None
+        Y_train_mean = None
+        X_train_std = None
+        Y_train_std = None
+        N_train = None
         if not return_XTX and not return_XTY:
             raise ValueError(
                 "At least one of `return_XTX` and `return_XTY` must be True."
@@ -152,7 +160,6 @@ class CVMatrix:
             raise ValueError("Response variables `Y` are not provided.")
         val_indices = self.val_index_dict[val_idx]
         X_val = self.X_total[val_indices]
-        kwargs = {}
         if return_XTY:
             Y_val = self.Y_total[val_indices]
         if self.center_X or self.center_Y or self.scale_X or self.scale_Y:
@@ -161,94 +168,243 @@ class CVMatrix:
             N_total_over_N_train = self.N / N_train
             N_val_over_N_train = N_val / N_train
         if self.center_X or self.center_Y or self.scale_X:
-            X_train_mean = self._compute_training_X_mean(
+            X_train_mean = self._compute_training_mat_mean(
                 X_val,
+                self.X_total_mean,
                 N_total_over_N_train,
                 N_val_over_N_train
             )
         if return_XTY and (self.center_X or self.center_Y or self.scale_Y):
-            Y_train_mean = self._compute_training_Y_mean(
+            Y_train_mean = self._compute_training_mat_mean(
                 Y_val,
+                self.Y_total_mean,
                 N_total_over_N_train,
                 N_val_over_N_train
             )
-        if (self.center_X or self.center_Y) and return_XTY:
-            kwargs["N_train"] = N_train
-            kwargs["X_train_mean"] = X_train_mean
-            kwargs["Y_train_mean"] = Y_train_mean
-        elif self.center_X:
-            kwargs["N_train"] = N_train
-            kwargs["X_train_mean"] = X_train_mean
         if self.scale_X:
-            X_train_std = self._compute_training_X_std(
+            X_train_std = self._compute_training_mat_std(
                 X_val,
                 X_train_mean,
+                self.sum_X_total,
+                self.sum_sq_X_total,
                 N_train
             )
-            kwargs["X_train_std"] = X_train_std
         if self.scale_Y and return_XTY:
-            Y_train_std = self._compute_training_Y_std(
+            Y_train_std = self._compute_training_mat_std(
                 Y_val,
                 Y_train_mean,
+                self.sum_Y_total,
+                self.sum_sq_Y_total,
                 N_train
             )
-            kwargs["Y_train_std"] = Y_train_std
         if return_XTX and return_XTY:
             return (
-                self._training_XTX(X_val, **kwargs),
-                self._training_XTY(X_val, Y_val, **kwargs)
+                self._training_kernel_matrix(
+                    X_val,
+                    X_val,
+                    X_train_mean,
+                    X_train_mean,
+                    X_train_std,
+                    X_train_std,
+                    N_train
+                ),
+                self._training_kernel_matrix(
+                    X_val,
+                    Y_val,
+                    X_train_mean,
+                    Y_train_mean,
+                    X_train_std,
+                    Y_train_std,
+                    N_train
+                )
             )
         if return_XTX:
-            return self._training_XTX(X_val, **kwargs)
-        return self._training_XTY(X_val, Y_val, **kwargs)
+            return self._training_kernel_matrix(
+                X_val,
+                X_val,
+                X_train_mean,
+                X_train_mean,
+                X_train_std,
+                X_train_std,
+                N_train
+            )
+        return self._training_kernel_matrix(
+            X_val,
+            Y_val,
+            X_train_mean,
+            Y_train_mean,
+            X_train_std,
+            Y_train_std,
+            N_train
+        )
 
-    def _init_X_total(self, X: np.ndarray) -> None:
+    def _training_kernel_matrix(
+            self,
+            X_val: np.ndarray,
+            mat2_val: np.ndarray,
+            X_train_mean: Union[None, np.ndarray] = None,
+            mat2_train_mean: Union[None, np.ndarray] = None,
+            X_train_std: Union[None, np.ndarray] = None,
+            mat2_train_std: Union[None, np.ndarray] = None,
+            N_train: Union[None, int] = None,
+    ) -> np.ndarray:
         """
-        Initializes the predictor variables.
+        Computes the training set kernel matrix for a given fold.
 
         Parameters
         ----------
-        X : Array of shape (N, K)
-            The predictor variables.
-        """
-        self.X_total = np.asarray(X, dtype=self.dtype)
-        if self.copy and X.dtype == self.dtype:
-            self.X_total = self.X_total.copy()
-        if self.X_total.ndim == 1:
-            self.X_total = self.X_total.reshape(-1, 1)
-        self.N, self.K = self.X_total.shape
+        X_val : Array of shape (N_val, K)
+            The validation set of predictor variables.
+        
+        mat2_val : Array of shape (N_val, K) or (N_val, M)
+            The validation set of predictor or resoponse variables.
 
-    def _init_Y_total(self, Y: np.ndarray) -> None:
+        X_train_mean : None or array of shape (1, K), optional, default=None
+            The row of column-wise means of the training set of predictor variables.
+
+        mat2_train_mean : None or array of shape (1, K) or (1, M), optional,
+        default=None
+            The row of column-wise means of the training set of predictor or response
+            variables.
+
+        X_train_std : None or array of shape (1, K), optional, default=None
+            The row of column-wise standard deviations of the training set of predictor
+            variables.
+
+        mat2_train_std : None or array of shape (1, K) or (1, M), optional, default=None
+            The row of column-wise standard deviations of the training set of predictor
+            or response variables.
+
+        N_train : None or int, optional, default=None
+            The size of the training set. Only required if `X_train_mean` or
+            `mat2_train_mean` is not `None`.
+
+        Returns
+        -------
+        Array of shape (K, K) or (K, M)
+            The training set kernel matrix.
         """
-        Initializes the response variables.
+        XTmat2_train = X_val.T @ mat2_val
+        if X_train_mean is not None:
+            XTmat2_train -= N_train * (X_train_mean.T @ mat2_train_mean)
+        if X_train_std is not None and mat2_train_std is not None:
+            return XTmat2_train / (X_train_std.T @ mat2_train_std)
+        if X_train_std is not None:
+            return XTmat2_train / X_train_std.T
+        if mat2_train_std is not None:
+            return XTmat2_train / mat2_train_std
+        return XTmat2_train
+
+    def _compute_training_mat_mean(
+            self,
+            mat_val: np.ndarray,
+            mat_total_mean: np.ndarray,
+            N_total_over_N_train: float,
+            N_val_over_N_train: float
+    ) -> np.ndarray:
+        """
+        Computes the row of column-wise means of a matrix for a given fold.
 
         Parameters
         ----------
-        Y : Array of shape (N, M)
-            The response variables.
-        """
-        if Y is None:
-            return
-        self.Y_total = np.asarray(Y, dtype=self.dtype)
-        if self.copy and Y.dtype == self.dtype:
-            self.Y_total = self.Y_total.copy()
-        if self.Y_total.ndim == 1:
-            self.Y_total = self.Y_total.reshape(-1, 1)
-        self.M = self.Y_total.shape[1]
+        mat_val : Array of shape (N_val, K) or (N_val, M)
+            The validation set of `X` or `Y`.
+        
+        mat_total_mean : Array of shape (1, K) or (1, M)
+            The row of column-wise means of the total matrix.
+        
+        N_total_over_N_train : float
+            The ratio of the total number of samples to the number of samples in the
+            training set.
+        
+        N_val_over_N_train : float
+            The ratio of the number of samples in the validation set to the number of
+            samples in the training set.
 
-    def _init_XTX_total(self) -> None:
+        Returns
+        -------
+        Array of shape (1, K) or (1, M)
+            The row of column-wise means of the training set matrix.
         """
-        Initializes the total :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` matrix.
-        """
-        self.XTX_total = self.X_total.T @ self.X_total
+        return (
+            N_total_over_N_train * mat_total_mean
+            - N_val_over_N_train * np.mean(mat_val, axis=0, keepdims=True)
+        )
 
-    def _init_XTY_total(self) -> None:
+    def _compute_training_mat_std(
+            self,
+            mat_val: np.ndarray,
+            mat_train_mean: np.ndarray,
+            sum_mat_total: np.ndarray,
+            sum_sq_mat_total: np.ndarray,
+            N_train: int
+    ) -> np.ndarray:
         """
-        Initializes the total :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` matrix.
+        Computes the row of column-wise standard deviations of a matrix for a given
+        fold.
+
+        Parameters
+        ----------
+        mat_val : Array of shape (N_val, K) or (N_val, M)
+            The validation set of `X` or `Y`.
+
+        mat_train_mean : Array of shape (1, K) or (1, M)
+            The row of column-wise means of the training matrix.
+
+        sum_mat_total : Array of shape (1, K) or (1, M)
+            The row of column-wise sums of the total matrix.
+
+        sum_sq_mat_total : Array of shape (1, K) or (1, M)
+            The row of column-wise sums of squares of the total matrix.
+
+        N_train : int
+            The size of the training set.
+
+        Returns
+        -------
+        Array of shape (1, K) or (1, M)
+            The row of column-wise standard deviations of the training set matrix.
         """
-        if self.Y_total is None:
-            return
-        self.XTY_total = self.X_total.T @ self.Y_total
+        train_sum_mat = sum_mat_total - np.expand_dims(
+            np.einsum("ij->j", mat_val), axis=0
+        )
+        train_sum_sq_mat = sum_sq_mat_total - np.expand_dims(
+            np.einsum("ij,ij->j", mat_val, mat_val), axis=0
+        )
+        mat_train_std = np.sqrt(
+            1
+            / (N_train - 1)
+            * (
+                -2 * mat_train_mean * train_sum_mat
+                + N_train
+                * np.einsum("ij,ij -> ij", mat_train_mean, mat_train_mean)
+                + train_sum_sq_mat
+            )
+        )
+        mat_train_std[mat_train_std == 0] = 1
+        return mat_train_std
+
+    def _init_mat(self, mat: np.ndarray) -> np.ndarray:
+        """
+        Casts the matrix to the dtype specified in the constructor and reshapes it if
+        the matrix is one-dimensional.
+
+        Parameters
+        ----------
+        mat : Array of shape (N, K) or (N, M) or (N,)
+            The matrix to be initialized.
+
+        Returns
+        -------
+        Array of shape (N, K) or (N, M) or (N, 1)
+            The initialized matrix.
+        """
+        mat = np.asarray(mat, dtype=self.dtype)
+        if self.copy and mat.dtype == self.dtype:
+            mat = mat.copy()
+        if mat.ndim == 1:
+            mat = mat.reshape(-1, 1)
+        return mat
 
     def _init_total_stats(self) -> None:
         """
@@ -299,204 +455,3 @@ class CVMatrix:
         for key in val_index_dict:
             val_index_dict[key] = np.asarray(val_index_dict[key], dtype=int)
         self.val_index_dict = val_index_dict
-
-    def _training_XTX(self, X_val: np.ndarray, **kwargs) -> np.ndarray:
-        """
-        Computes the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` for a given
-        fold.
-
-        Parameters
-        ----------
-        X_val : Array of shape (N_val, K)
-            The validation set of predictor variables.
-        
-        kwargs : dict
-            Additional keyword arguments used for potential centering and scaling.
-
-        Returns
-        -------
-        Array of shape (K, K)
-            The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` matrix.
-        """
-        XTX_train = self.XTX_total - X_val.T @ X_val
-        if "X_train_mean" in kwargs:
-            X_train_mean = kwargs["X_train_mean"]
-            N_train = kwargs["N_train"]
-            XTX_train -= N_train * (X_train_mean.T @ X_train_mean)
-        if "X_train_std" in kwargs:
-            X_train_std = kwargs["X_train_std"]
-            XTX_train /= (X_train_std.T @ X_train_std)
-        return XTX_train
-
-    def _training_XTY(
-            self,
-            X_val: np.ndarray,
-            Y_val: np.ndarray,
-            **kwargs
-    ) -> np.ndarray:
-        """
-        Computes the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given
-        fold.
-
-        Parameters
-        ----------
-        X_val : Array of shape (N_val, K)
-            The validation set of predictor variables.
-        
-        Y_val : Array of shape (N_val, M)
-            The validation set of response variables.
-        
-        kwargs : dict
-            Additional keyword arguments used for potential centering and scaling.
-
-        Returns
-        -------
-        Array of shape (K, M)
-            The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` matrix.
-        """
-        XTY_train = self.XTY_total - X_val.T @ Y_val
-        if "X_train_mean" in kwargs or "Y_train_mean" in kwargs:
-            X_train_mean = kwargs["X_train_mean"]
-            Y_train_mean = kwargs["Y_train_mean"]
-            N_train = kwargs["N_train"]
-            XTY_train -= N_train * (X_train_mean.T @ Y_train_mean)
-        if "X_train_std" in kwargs and "Y_train_std" in kwargs:
-            X_train_std = kwargs["X_train_std"]
-            Y_train_std = kwargs["Y_train_std"]
-            return XTY_train / (X_train_std.T @ Y_train_std)
-        if "X_train_std" in kwargs:
-            X_train_std = kwargs["X_train_std"]
-            return XTY_train / X_train_std.T
-        if "Y_train_std" in kwargs:
-            Y_train_std = kwargs["Y_train_std"]
-            return XTY_train / Y_train_std
-        return XTY_train
-
-    def _compute_training_X_mean(
-            self,
-            X_val: np.ndarray,
-            N_total_over_N_train: float,
-            N_val_over_N_train: float
-    ) -> np.ndarray:
-        """
-        Computes the row of column-wise means of `X` for a given fold.
-
-        Parameters
-        ----------
-        X_val : Array of shape (N_val, K)
-            The validation set of predictor variables.
-
-        Returns
-        -------
-        Array of shape (1, K)
-            The row of column-wise means of `X`.
-        """
-        return (
-            N_total_over_N_train * self.X_total_mean
-            - N_val_over_N_train * np.mean(X_val, axis=0, keepdims=True)
-        )
-
-    def _compute_training_Y_mean(
-            self,
-            Y_val: np.ndarray,
-            N_total_over_N_train: float,
-            N_val_over_N_train: float
-    ) -> np.ndarray:
-        """
-        Computes the row of column-wise means of `Y` for a given fold.
-
-        Parameters
-        ----------
-        Y_val : Array of shape (N_val, M)
-            The validation set of response variables.
-
-        Returns
-        -------
-        Array of shape (1, M)
-            The row of column-wise means of `Y`.
-        """
-        return (
-            N_total_over_N_train * self.Y_total_mean
-            - N_val_over_N_train * np.mean(Y_val, axis=0, keepdims=True)
-        )
-
-    def _compute_training_X_std(
-            self,
-            X_val: np.ndarray,
-            X_train_mean,
-            N_train: int
-    ) -> np.ndarray:
-        """
-        Computes the row of column-wise standard deviations of `X` for a given fold.
-
-        Parameters
-        ----------
-        X_val : Array of shape (N_val, K)
-            The validation set of predictor variables.
-        
-        X_train_mean : Array of shape (1, K)
-            The row of column-wise means of `X` for the training set.
-
-        N_train : int
-            The size of the training set.
-
-        Returns
-        -------
-        Array of shape (1, K)
-            The row of column-wise standard deviations of `X`.
-        """
-        train_sum_X = self.sum_X_total - np.expand_dims(
-            np.einsum("ij->j", X_val), axis=0
-        )
-        train_sum_sq_X = self.sum_sq_X_total - np.expand_dims(
-            np.einsum("ij,ij->j", X_val, X_val), axis=0
-        )
-        X_train_std = np.sqrt(
-            1
-            / (N_train - 1)
-            * (
-                -2 * X_train_mean * train_sum_X
-                + N_train
-                * np.einsum("ij,ij -> ij", X_train_mean, X_train_mean)
-                + train_sum_sq_X
-            )
-        )
-        X_train_std[X_train_std == 0] = 1
-        return X_train_std
-
-    def _compute_training_Y_std(
-            self,
-            Y_val: np.ndarray,
-            Y_train_mean: np.ndarray,
-            N_train) -> np.ndarray:
-        """
-        Computes the row of column-wise standard deviations of `Y` for a given fold.
-
-        Parameters
-        ----------
-        Y_val : Array of shape (N_val, M)
-            The validation set of response variables.
-
-        Returns
-        -------
-        Array of shape (1, M)
-            The row of column-wise standard deviations of `Y`.
-        """
-        train_sum_Y = self.sum_Y_total - np.expand_dims(
-            np.einsum("ij -> j", Y_val), axis=0
-        )
-        train_sum_sq_Y = self.sum_sq_Y_total - np.expand_dims(
-            np.einsum("ij,ij -> j", Y_val, Y_val), axis=0
-        )
-        Y_train_std = np.sqrt(
-            1
-            / (N_train - 1)
-            * (
-                -2 * Y_train_mean * train_sum_Y
-                + N_train
-                * np.einsum("ij,ij -> ij", Y_train_mean, Y_train_mean)
-                + train_sum_sq_Y
-            )
-        )
-        Y_train_std[Y_train_std == 0] = 1
-        return Y_train_std
