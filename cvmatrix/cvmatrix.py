@@ -86,7 +86,7 @@ class CVMatrix:
         self.N = None
         self.K = None
         self.M = None
-        self.val_index_dict = {}
+        self.val_index_dict = None
         self.X_total_mean = None
         self.Y_total_mean = None
         self.XTX_total = None
@@ -541,12 +541,6 @@ class CVMatrix:
         cv_splits : Iterable of Hashable with N elements
             An iterable defining cross-validation splits. Each unique value in
             `cv_splits` corresponds to a different fold.
-
-        Returns
-        -------
-        index_dict : dict of Hashable to Array
-            A dictionary mapping each unique value in `cv_splits` to an array of
-            validation indices.
         """
         val_index_dict = {}
         for i, num in enumerate(cv_splits):
