@@ -121,10 +121,62 @@ class CVMatrix:
             self.M = self.Y_total.shape[1]
             self.XTY_total = self.X_total.T @ self.Y_total
         self._init_total_stats()
+    
+    def change_preprocessing(
+            self,
+            center_X: bool,
+            center_Y: bool,
+            scale_X: bool,
+            scale_Y: bool
+    ) -> None:
+        """
+        Changes the preprocessing parameters for the model. This method can be called
+        multiple times to change the preprocessing parameters without re-fitting the
+        model.
+
+        Parameters
+        ----------
+        center_X : bool
+            Whether to center `X` before computation of
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by subtracting its row of
+            column-wise means from each row. The row of column-wise means is computed on
+            the training set for each fold to avoid data leakage.
+
+        center_Y : bool
+            Whether to center `Y` before computation of
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by subtracting its row of
+            column-wise means from each row. The row of column-wise means is computed on
+            the training set for each fold to avoid data leakage. This parameter is
+            ignored if `Y` is `None`.
+
+        scale_X : bool
+            Whether to scale `X` before computation of
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by dividing each row with the row
+            of `X`'s column-wise standard deviations. Bessel's correction for the
+            unbiased estimate of the sample standard deviation is used. The row of
+            column-wise standard deviations is computed on the training set for each fold
+            to avoid data leakage.
+
+        scale_Y : bool
+            Whether to scale `Y` before computation of
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by dividing each row with the row
+            of `X`'s column-wise standard deviations. Bessel's correction for the
+            unbiased estimate of the sample standard deviation is used. The row of
+            column-wise standard deviations is computed on the training set for each fold
+            to avoid data leakage. This parameter is ignored if `Y` is `None`.
+        """
+        self.center_X = center_X
+        self.center_Y = center_Y
+        self.scale_X = scale_X
+        self.scale_Y = scale_Y
+        self._init_total_stats()
 
     def load_cv_splits(self, cv_splits: Iterable[Hashable]) -> None:
         """
-        Loads new cross-validation splits.
+        Loads new cross-validation splits. This method can be called multiple times to
+        change the cross-validation splits without re-fitting the model.
 
         Parameters
         ----------
@@ -514,21 +566,31 @@ class CVMatrix:
         """
         if self.center_X or self.center_Y or self.scale_X:
             self.X_total_mean = np.mean(self.X_total, axis=0, keepdims=True)
+        else:
+            self.X_total_mean = None
         if (
             (self.center_X or self.center_Y or self.scale_Y)
             and self.Y_total is not None
         ):
             self.Y_total_mean = np.mean(self.Y_total, axis=0, keepdims=True)
+        else:
+            self.Y_total_mean = None
         if self.scale_X:
             self.sum_X_total = np.expand_dims(np.einsum("ij->j", self.X_total), axis=0)
             self.sum_sq_X_total = np.expand_dims(
                 np.einsum("ij,ij->j", self.X_total, self.X_total), axis=0
             )
+        else:
+            self.sum_X_total = None
+            self.sum_sq_X_total = None
         if self.scale_Y and self.Y_total is not None:
             self.sum_Y_total = np.expand_dims(np.einsum("ij->j", self.Y_total), axis=0)
             self.sum_sq_Y_total = np.expand_dims(
                 np.einsum("ij,ij->j", self.Y_total, self.Y_total), axis=0
             )
+        else:
+            self.sum_Y_total = None
+            self.sum_sq_Y_total = None
 
     def _init_val_indices_dict(
         self, cv_splits: Iterable[Hashable]
