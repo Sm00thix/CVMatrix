@@ -121,57 +121,6 @@ class CVMatrix:
             self.M = self.Y_total.shape[1]
             self.XTY_total = self.X_total.T @ self.Y_total
         self._init_total_stats()
-    
-    def change_preprocessing(
-            self,
-            center_X: bool,
-            center_Y: bool,
-            scale_X: bool,
-            scale_Y: bool
-    ) -> None:
-        """
-        Changes the preprocessing parameters for the model. This method can be called
-        multiple times to change the preprocessing parameters without re-fitting the
-        model.
-
-        Parameters
-        ----------
-        center_X : bool
-            Whether to center `X` before computation of
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by subtracting its row of
-            column-wise means from each row. The row of column-wise means is computed on
-            the training set for each fold to avoid data leakage.
-
-        center_Y : bool
-            Whether to center `Y` before computation of
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by subtracting its row of
-            column-wise means from each row. The row of column-wise means is computed on
-            the training set for each fold to avoid data leakage. This parameter is
-            ignored if `Y` is `None`.
-
-        scale_X : bool
-            Whether to scale `X` before computation of
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by dividing each row with the row
-            of `X`'s column-wise standard deviations. Bessel's correction for the
-            unbiased estimate of the sample standard deviation is used. The row of
-            column-wise standard deviations is computed on the training set for each fold
-            to avoid data leakage.
-
-        scale_Y : bool
-            Whether to scale `Y` before computation of
-            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` by dividing each row with the row
-            of `X`'s column-wise standard deviations. Bessel's correction for the
-            unbiased estimate of the sample standard deviation is used. The row of
-            column-wise standard deviations is computed on the training set for each fold
-            to avoid data leakage. This parameter is ignored if `Y` is `None`.
-        """
-        self.center_X = center_X
-        self.center_Y = center_Y
-        self.scale_X = scale_X
-        self.scale_Y = scale_Y
-        self._init_total_stats()
 
     def load_cv_splits(self, cv_splits: Iterable[Hashable]) -> None:
         """
