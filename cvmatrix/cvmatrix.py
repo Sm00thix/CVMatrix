@@ -23,13 +23,9 @@ class CVMatrix:
 
     Parameters
     ----------
-    X : Array-like of shape (N, K) or (N,)
-        Predictor variables.
-    
-    Y : None or array-like of shape (N, M) or (N,), optional, default=None
-        Response variables. If `None`, only :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
-        will be computed and :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` will not be
-        computed. This is useful for models such as PCA and PCR.
+    cv_splits : Iterable of Hashable with N elements
+        An iterable defining cross-validation splits. Each unique value in
+        `cv_splits` corresponds to a different fold.
 
     center_X : bool, optional, default=True
         Whether to center `X` before computation of
@@ -62,8 +58,8 @@ class CVMatrix:
         standard deviations is computed on the training set for each fold to avoid data
         leakage. This parameter is ignored if `Y` is `None`.
 
-    dtype : data-type, optional, default=np.float64
-        The data-type of the arrays used in the computation.
+    dtype : np.floating, optional, default=np.float64
+        The data type used for the computations. The default is `np.float64`.
 
     copy : bool, optional, default=True
         Whether to make a copy of the input arrays. If `False` and the input arrays are
@@ -74,14 +70,15 @@ class CVMatrix:
     """
 
     def __init__(
-        self,
-        center_X: bool = True,
-        center_Y: bool = True,
-        scale_X: bool = True,
-        scale_Y: bool = True,
-        dtype: npt.DTypeLike = np.float64,
-        copy: bool = True,
-    ) -> None:
+            self,
+            cv_splits: Iterable[Hashable],
+            center_X: bool = True,
+            center_Y: bool = True,
+            scale_X: bool = True,
+            scale_Y: bool = True,
+            dtype: np.floating = np.float64,
+            copy: bool = True,
+        ) -> None:
         self.center_X = center_X
         self.center_Y = center_Y
         self.scale_X = scale_X
@@ -93,7 +90,6 @@ class CVMatrix:
         self.N = None
         self.K = None
         self.M = None
-        self.val_folds_dict = None
         self.X_total_mean = None
         self.Y_total_mean = None
         self.XTX_total = None
@@ -102,6 +98,8 @@ class CVMatrix:
         self.sum_Y_total = None
         self.sum_sq_X_total = None
         self.sum_sq_Y_total = None
+        self.val_folds_dict = None
+        self._init_val_folds_dict(cv_splits)
 
     def fit(self, X: npt.ArrayLike, Y: Union[None, npt.ArrayLike] = None) -> None:
         """
@@ -129,23 +127,11 @@ class CVMatrix:
             self.XTY_total = self.X_total.T @ self.Y_total
         self._init_total_stats()
 
-    def load_cv_splits(self, cv_splits: Iterable[Hashable]) -> None:
-        """
-        Loads new cross-validation splits. This method can be called multiple times to
-        change the cross-validation splits without re-fitting the model.
-
-        Parameters
-        ----------
-        cv_splits : Iterable of Hashable with N elements
-            An iterable defining cross-validation splits. Each unique value in
-            `cv_splits` corresponds to a different fold.
-        """
-        self._init_val_folds_dict(cv_splits)
-
     def training_XTX(self, val_fold: Hashable) -> np.ndarray:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
-        corresponding to every fold except the given validation fold.
+        corresponding to every sample except those belonging to the given validation
+        fold.
 
         Parameters
         ----------
@@ -160,20 +146,26 @@ class CVMatrix:
 
         Raises
         ------
+        ValueError
+            If `val_fold` was not provided as a cross-validation split in the
+            `cv_splits` parameter of the constructor.
 
         See Also
         --------
-        training_XTX_XTY : Returns the training set
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold. This method is
-        faster than calling `training_XTX` and `training_XTY` separately.
+        training_XTY :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`
+        training_XTX_XTY :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given validation fold. This
+            method is faster than calling `training_XTX` and `training_XTY` separately.
         """
         return self._training_matrices(True, False, val_fold)
 
     def training_XTY(self, val_fold: Hashable) -> np.ndarray:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`
-        corresponding to every fold except the given validation fold.
+        corresponding to every sample except those belonging to the given validation
+        fold.
 
         Parameters
         ----------
@@ -191,20 +183,26 @@ class CVMatrix:
         ValueError
             If `Y` is `None`.
 
+        ValueError
+            If `val_fold` was not provided as a cross-validation split in the
+            `cv_splits` parameter of the constructor.
+
         See Also
         --------
-        training_XTX_XTY : Returns the training fold
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given fold. This method is
-        faster than calling `training_XTX` and `training_XTY` separately.
+        training_XTX :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
+        training_XTX_XTY :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` for a given validation fold. This
+            method is faster than calling `training_XTX` and `training_XTY` separately.
         """
         return self._training_matrices(False, True, val_fold)
 
     def training_XTX_XTY(self, val_fold: Hashable) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` corresponding to every fold except
-        the given validation fold.
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` corresponding to every sample except
+        those belonging to the given validation fold.
 
         Parameters
         ----------
@@ -218,6 +216,22 @@ class CVMatrix:
         tuple of arrays of shapes (K, K) and (K, M)
             The training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and
             :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+        
+        Raises
+        ------
+        ValueError
+            If `Y` is `None`.
+
+        ValueError
+            If `val_fold` was not provided as a cross-validation split in the
+            `cv_splits` parameter of the constructor.
+
+        See Also
+        --------
+        training_XTX :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
+        training_XTY :
+            Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`
         """
         return self._training_matrices(True, True, val_fold)
 
@@ -226,10 +240,11 @@ class CVMatrix:
             return_XTX: bool,
             return_XTY: bool,
             val_fold: Hashable
-    ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
+        ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """
         Returns the training set :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and/or
-        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` corresponding to 
+        :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` corresponding to every sample except
+        those belonging to the given validation fold.
 
         Parameters
         ----------
@@ -257,6 +272,10 @@ class CVMatrix:
         ValueError
             If both `return_XTX` and `return_XTY` are `False` or if `return_XTY` is
             `True` and `Y` is `None`.
+
+        ValueError
+            If `val_fold` was not provided as a cross-validation split in the
+            `cv_splits` parameter of the constructor.
         """
         if not return_XTX and not return_XTY:
             raise ValueError(
@@ -269,7 +288,10 @@ class CVMatrix:
         X_train_std = None
         Y_train_std = None
         N_train = None
-        val_indices = self.val_folds_dict[val_fold]
+        try:
+            val_indices = self.val_folds_dict[val_fold]
+        except KeyError as e:
+            raise ValueError(f"Validation fold {val_fold} not found.") from e
         X_val = self.X_total[val_indices]
         if return_XTY:
             Y_val = self.Y_total[val_indices]
@@ -318,7 +340,8 @@ class CVMatrix:
                     X_train_mean,
                     X_train_std,
                     X_train_std,
-                    N_train
+                    N_train,
+                    center=self.center_X
                 ),
                 self._training_kernel_matrix(
                     self.XTY_total,
@@ -328,7 +351,8 @@ class CVMatrix:
                     Y_train_mean,
                     X_train_std,
                     Y_train_std,
-                    N_train
+                    N_train,
+                    center=self.center_X or self.center_Y
                 )
             )
         if return_XTX:
@@ -340,7 +364,8 @@ class CVMatrix:
                 X_train_mean,
                 X_train_std,
                 X_train_std,
-                N_train
+                N_train,
+                center=self.center_X
             )
         return self._training_kernel_matrix(
             self.XTY_total,
@@ -350,7 +375,8 @@ class CVMatrix:
             Y_train_mean,
             X_train_std,
             Y_train_std,
-            N_train
+            N_train,
+            center=self.center_X or self.center_Y
         )
 
     def _training_kernel_matrix(
@@ -363,14 +389,17 @@ class CVMatrix:
             X_train_std: Union[None, np.ndarray] = None,
             mat2_train_std: Union[None, np.ndarray] = None,
             N_train: Union[None, int] = None,
-    ) -> np.ndarray:
+            center: bool = False,
+        ) -> np.ndarray:
         """
         Computes the training set kernel matrix for a given fold.
 
         Parameters
         ----------
         total_kernel_mat : Array of shape (N, K) or (N, M)
-            The total kernel matrix.
+            The total kernel matrix :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` or
+            :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}`.
+
         X_val : Array of shape (N_val, K)
             The validation set of predictor variables.
         
@@ -396,6 +425,11 @@ class CVMatrix:
         N_train : None or int, optional, default=None
             The size of the training set. Only required if `X_train_mean` or
             `mat2_train_mean` is not `None`.
+        
+        center : bool, optional, default=False
+            Whether to center the kernel matrix. If `True`, the kernel matrix is
+            centered. Setting this parameter to `True` requires that `X_train_mean` and
+            `mat2_train_mean` are not `None`.
 
         Returns
         -------
@@ -403,7 +437,7 @@ class CVMatrix:
             The training set kernel matrix.
         """
         XTmat2_train = total_kernel_mat - X_val.T @ mat2_val
-        if X_train_mean is not None:
+        if center:
             XTmat2_train -= N_train * (X_train_mean.T @ mat2_train_mean)
         if X_train_std is not None and mat2_train_std is not None:
             return XTmat2_train / (X_train_std.T @ mat2_train_std)
@@ -419,7 +453,7 @@ class CVMatrix:
             mat_total_mean: np.ndarray,
             N_total_over_N_train: float,
             N_val_over_N_train: float
-    ) -> np.ndarray:
+        ) -> np.ndarray:
         """
         Computes the row of column-wise means of a matrix for a given fold.
 
@@ -456,7 +490,7 @@ class CVMatrix:
             sum_mat_total: np.ndarray,
             sum_sq_mat_total: np.ndarray,
             N_train: int
-    ) -> np.ndarray:
+        ) -> np.ndarray:
         """
         Computes the row of column-wise standard deviations of a matrix for a given
         fold.
@@ -484,10 +518,10 @@ class CVMatrix:
             The row of column-wise standard deviations of the training set matrix.
         """
         train_sum_mat = sum_mat_total - np.expand_dims(
-            np.einsum("ij->j", mat_val), axis=0
+            np.einsum("ij -> j", mat_val), axis=0
         )
         train_sum_sq_mat = sum_sq_mat_total - np.expand_dims(
-            np.einsum("ij,ij->j", mat_val, mat_val), axis=0
+            np.einsum("ij,ij -> j", mat_val, mat_val), axis=0
         )
         mat_train_std = np.sqrt(
             1
@@ -540,17 +574,21 @@ class CVMatrix:
         else:
             self.Y_total_mean = None
         if self.scale_X:
-            self.sum_X_total = np.expand_dims(np.einsum("ij->j", self.X_total), axis=0)
+            self.sum_X_total = np.expand_dims(
+                np.einsum("ij -> j", self.X_total), axis=0
+            )
             self.sum_sq_X_total = np.expand_dims(
-                np.einsum("ij,ij->j", self.X_total, self.X_total), axis=0
+                np.einsum("ij,ij -> j", self.X_total, self.X_total), axis=0
             )
         else:
             self.sum_X_total = None
             self.sum_sq_X_total = None
         if self.scale_Y and self.Y_total is not None:
-            self.sum_Y_total = np.expand_dims(np.einsum("ij->j", self.Y_total), axis=0)
+            self.sum_Y_total = np.expand_dims(
+                np.einsum("ij -> j", self.Y_total), axis=0
+            )
             self.sum_sq_Y_total = np.expand_dims(
-                np.einsum("ij,ij->j", self.Y_total, self.Y_total), axis=0
+                np.einsum("ij,ij -> j", self.Y_total, self.Y_total), axis=0
             )
         else:
             self.sum_Y_total = None

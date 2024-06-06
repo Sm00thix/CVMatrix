@@ -18,5 +18,14 @@
             "console": "integratedTerminal",
             "justMyCode": false,
         },
+        {
+            "name": "Python: Debug Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${fileDirname}",
+        }
     ]
 }

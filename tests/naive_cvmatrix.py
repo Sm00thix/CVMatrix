@@ -9,7 +9,7 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 
-from typing import Hashable, Union
+from typing import Hashable, Iterable, Union
 
 import numpy as np
 from numpy import typing as npt
@@ -25,13 +25,9 @@ class NaiveCVMatrix(CVMatrix):
 
     Parameters
     ----------
-    X : Array-like of shape (N, K) or (N,)
-        Predictor variables.
-
-    Y : None or array-like of shape (N, M) or (N,), optional, default=None
-        Response variables. If `None`, only :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}`
-        will be computed and :math:`\mathbf{X}^{\mathbf{T}}\mathbf{Y}` will not be
-        computed. This is useful for models such as PCA and PCR.
+    cv_splits : Iterable of Hashable with N elements
+        An iterable defining cross-validation splits. Each unique value in
+        `cv_splits` corresponds to a different fold.
 
     center_X : bool, optional, default=True
         Whether to center `X` before computation of
@@ -64,8 +60,8 @@ class NaiveCVMatrix(CVMatrix):
         standard deviations is computed on the training set for each fold to avoid data
         leakage. This parameter is ignored if `Y` is `None`.
 
-    dtype : data-type, optional, default=np.float64
-        The data-type of the arrays used in the computation.
+    dtype : np.floating, optional, default=np.float64
+        The data type used for the computations. The default is `np.float64`.
 
     copy : bool, optional, default=True
         Whether to make a copy of the input arrays. If `False` and the input arrays are
@@ -76,15 +72,17 @@ class NaiveCVMatrix(CVMatrix):
     """
 
     def __init__(
-        self,
-        center_X: bool = True,
-        center_Y: bool = True,
-        scale_X: bool = True,
-        scale_Y: bool = True,
-        dtype: npt.DTypeLike = np.float64,
-        copy: bool = True,
-    ) -> None:
+            self,
+            cv_splits: Iterable[Hashable],
+            center_X: bool = True,
+            center_Y: bool = True,
+            scale_X: bool = True,
+            scale_Y: bool = True,
+            dtype: np.floating = np.float64,
+            copy: bool = True,
+        ) -> None:
         super().__init__(
+            cv_splits=cv_splits,
             center_X=center_X,
             center_Y=center_Y,
             scale_X=scale_X,
@@ -121,7 +119,7 @@ class NaiveCVMatrix(CVMatrix):
             return_XTX: bool,
             return_XTY: bool,
             val_fold: Hashable
-    ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
+        ) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         if not return_XTX and not return_XTY:
             raise ValueError(
                 "At least one of `return_XTX` and `return_XTY` must be True."
