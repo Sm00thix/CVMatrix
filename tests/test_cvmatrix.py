@@ -429,8 +429,8 @@ class TestClass:
         scale_Xs = [True, False]
         scale_Ys = [True, False]
         dtypes = [np.float16, np.float32, np.float64]
-        if not sys.platform.startswith("win"):
-            # Windows does not support float128
+        if not sys.platform.startswith("win") and not sys.platform.startswith("darwin"):
+            # Windows and MacOS do not support float128
             dtypes.append(np.float128)
         for center_X, center_Y, scale_X, scale_Y, dtype in product(
                 center_Xs, center_Ys, scale_Xs, scale_Ys, dtypes):
