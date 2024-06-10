@@ -1,3 +1,4 @@
+.DS_Store
 .vscode/
 
 # Byte-compiled / optimized / DLL files
@@ -52,6 +53,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+junit/
 
 # Translations
 *.mo
@@ -161,4 +163,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-!.github/*
+!.github/**
+
+docs/html/
+docs/build/
