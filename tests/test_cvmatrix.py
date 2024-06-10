@@ -15,6 +15,7 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 
+import sys
 from itertools import product
 from typing import Hashable, Iterable, Union
 
@@ -428,6 +429,9 @@ class TestClass:
         scale_Xs = [True, False]
         scale_Ys = [True, False]
         dtypes = [np.float16, np.float32, np.float64, np.float128]
+        if sys.platform.startswith("win"):
+            # Windows does not support float128
+            dtypes.remove(np.float128)
         for center_X, center_Y, scale_X, scale_Y, dtype in product(
                 center_Xs, center_Ys, scale_Xs, scale_Ys, dtypes):
             naive, fast = self.fit_models(

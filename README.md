@@ -36,9 +36,9 @@ For an implementation of the fast cross-validation algorithms combined with Impr
 > import numpy as np
 > from cvmatrix.cvmatrix import CVMatrix
 >
->  N = 100  # Number of samples.
->  K = 50  # Number of features.
->  M = 10  # Number of targets.
+> N = 100  # Number of samples.
+> K = 50  # Number of features.
+> M = 10  # Number of targets.
 >
 > X = np.random.uniform(size=(N, K)) # Random X data
 > Y = np.random.uniform(size=(N, M)) # Random Y data
