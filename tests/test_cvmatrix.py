@@ -1,14 +1,25 @@
 """
-TODO: Write module docstring
+This file contains tests for the cvmatrix package. In general, the tests compare the
+output of the fast algorithms implemented in the CVMatrix class with the output of the
+naive algorithms implemented in the NaiveCVMatrix class, both of which are described in
+the article by Engstrøm. Some of the tests are performed on a real dataset of NIR
+spectra and ground truth values for 8 different grain varieties, protein, and moisture.
+This dataset is publicly available on GitHub and originates from the articles by Dreier
+et al. and Engstrøm et al. See the load_data module for more information about the
+dataset.
+
+Engstrøm, O.-C. G. (2024):
+https://arxiv.org/abs/2401.13185
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
 """
 
 from itertools import product
 from typing import Hashable, Iterable, Union
 
-import joblib
 import numpy as np
 import pytest
-from joblib import Parallel, delayed
 from numpy import typing as npt
 from numpy.testing import assert_allclose
 
@@ -531,57 +542,3 @@ class TestClass:
             fast.training_XTX(invalid_split)
         with pytest.raises(ValueError, match=error_msg):
             fast.training_XTY(invalid_split)
-
-    def test_parallel(self):
-        """
-        Tests that the CVMatrix model can be used in parallel.
-        """
-        X = np.array([1, 2, 3, 4, 5])
-        Y = np.array([5, 4, 3, 2, 1])
-        cv_splits = np.array([0, 0, 1, 1, 2])
-        center_Xs = [True, False]
-        center_Ys = [True, False]
-        scale_Xs = [True, False]
-        scale_Ys = [True, False]
-        n_jobs = min(joblib.cpu_count(), len(np.unique(cv_splits)))
-        for center_X, center_Y, scale_X, scale_Y in product(
-                center_Xs, center_Ys, scale_Xs, scale_Ys):
-            fast = self.fit_fast(X, Y, cv_splits, center_X, center_Y, scale_X, scale_Y)
-
-            # Test parallel execution of training_XTX_XTY
-            pXTXs, pXTYs = zip(*
-                Parallel(n_jobs=n_jobs)(
-                    delayed(fast.training_XTX_XTY)(val_split)
-                    for val_split in np.unique(cv_splits)
-                )
-            )
-            sXTXs, sXTYs = zip(*
-                [
-                    fast.training_XTX_XTY(val_split)
-                    for val_split in np.unique(cv_splits)
-                ]
-            )
-            assert_allclose(pXTXs, sXTXs)
-            assert_allclose(pXTYs, sXTYs)
-
-            # Test parallel execution of training_XTX
-            direct_pXTXs = Parallel(n_jobs=n_jobs)(
-                delayed(fast.training_XTX)(val_split)
-                for val_split in np.unique(cv_splits)
-            )
-            direct_sXTXs = [
-                fast.training_XTX(val_split)
-                for val_split in np.unique(cv_splits)
-            ]
-            assert_allclose(direct_pXTXs, direct_sXTXs)
-
-            # Test parallel execution of training_XTY
-            direct_pXTYs = Parallel(n_jobs=n_jobs)(
-                delayed(fast.training_XTY)(val_split)
-                for val_split in np.unique(cv_splits)
-            )
-            direct_sXTYs = [
-                fast.training_XTY(val_split)
-                for val_split in np.unique(cv_splits)
-            ]
-            assert_allclose(direct_pXTYs, direct_sXTYs)

@@ -1,0 +1,35 @@
+name: Test
+description: Test the package
+
+inputs:
+  PYTHON_VERSION:
+    description: Test Python version
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+      shell: bash
+
+    - name: Install project dependencies
+      run: poetry install
+      shell: bash
+
+    - name: Install additional dependencies for testing
+      run: |
+        poetry add --group dev pandas pytest flake8 pytest-cov typeguard
+      shell: bash
+
+    - name: Run tests
+      run: |
+        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=cvmatrix/ --cov-report=xml --cov-report=html --typeguard-packages=cvmatrix/
+      shell: bash

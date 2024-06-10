@@ -1,9 +1,10 @@
 """
 Contains the CVMatrix class which implements methods for naive computation of training
 set kernel matrices in cross-validation using the naive algorithms described in the
-paper by O.-C. G. Engstrøm: https://arxiv.org/abs/2401.13185
+paper by Engstrøm. The implementation is written using NumPy.
 
-The implementation is written using NumPy.
+Engstrøm, O.-C. G. (2024):
+https://arxiv.org/abs/2401.13185
 
 Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk

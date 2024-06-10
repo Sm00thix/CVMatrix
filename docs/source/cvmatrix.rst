@@ -4,4 +4,4 @@ Module contents
 ---------------
 .. toctree::
 
-    cvmatrix
+    cvmatrix_module
