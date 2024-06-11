@@ -12,7 +12,7 @@
 
 [![Build Status](https://github.com/Sm00thix/CVMatrix/actions/workflows/workflow.yml/badge.svg)](https://github.com/Sm00thix/CVMatrix/actions/workflows/workflow.yml)
 
-This repository contains the source code for the [`cvmatrix`](https://pypi.org/project/cvmatrix/) package which implements the fast algorithms by Engstrøm [[1]](#references) for computation of training set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ in a cross-validation setting. In addition to correctly handling arbitrary row-wise pre-processing, the algorithms allow for and efficiently and correctly handle any combination of column-wise centering and scaling of `X` and `Y` based on training set statistics.
+The [`cvmatrix`](https://pypi.org/project/cvmatrix/) package implements the fast algorithms by Engstrøm [[1]](#references) for computation of training set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ in a cross-validation setting. In addition to correctly handling arbitrary row-wise pre-processing, the algorithms allow for and efficiently and correctly handle any combination of column-wise centering and scaling of `X` and `Y` based on training set statistics.
 
 For an implementation of the fast cross-validation algorithms combined with Improved Kernel Partial Least Squares [[2]](#references), see the Python package [`ikpls`](https://pypi.org/project/ikpls/).
 
