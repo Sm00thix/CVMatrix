@@ -55,7 +55,7 @@ For an implementation of the fast cross-validation algorithms combined with Impr
 > # Fit on X and Y
 > cvm.fit(X=X, Y=Y)
 > # Compute training set XTX and/or XTY for each fold
-> for val_split in np.unique(cv_splits):
+> for val_split in cvm.val_folds_dict.keys():
 >     # Get both XTX and XTY
 >     training_XTX, training_XTY = cvm.training_XTX_XTY(val_split)
 >     # Get only XTX
@@ -67,6 +67,16 @@ For an implementation of the fast cross-validation algorithms combined with Impr
 In [examples](https://github.com/Sm00thix/CVMatrix/tree/main/examples) you will find:
 
 - [Compute training matrices with CVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/examples/training_matrices.py)
+
+## Benchmarks
+
+We have benchmarked the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the straight-forward, naive algorithms [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks)
+
+<p align=center>
+   <img src="./benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
+   <br>
+   <em> <strong>Left:</strong> Benchmarking the CVMatrix implementation versus the straight-forward, naive implementation (NaiveCVMatrix) using three common combinations of centering and scaling. <strong>Right:</strong> Benchmarking the CVMatrix implementation for all possible combinations of centering and scaling. </em>
+</p>
 
 ## Contribute
 
