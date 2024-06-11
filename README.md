@@ -64,13 +64,13 @@ For an implementation of the fast cross-validation algorithms combined with Impr
 >     training_XTY = cvm.training_XTY(val_split)
 
 ### Examples
-In [examples](https://github.com/Sm00thix/CVMatrix/tree/main/examples) you will find:
+In [examples](https://github.com/Sm00thix/CVMatrix/tree/main/examples), you will find:
 
 - [Compute training matrices with CVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/examples/training_matrices.py)
 
 ## Benchmarks
 
-In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks) we have benchmarked the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the straight-forward, naive algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py).
+In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks), we have benchmarked the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the straight-forward, naive algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py).
 
 <p align=center>
    <img src="./benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
