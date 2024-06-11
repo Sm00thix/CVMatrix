@@ -112,11 +112,11 @@ class CVMatrix:
         Parameters
         ----------
         X : Array-like of shape (N, K) or (N,)
-            Predictor variables.
+            Predictor variables for the entire dataset.
         
         Y : None or array-like of shape (N, M) or (N,), optional, default=None
-            Response variables. If `None`, subsequent calls to training_XTY and
-            training_XTX_XTY will raise a `ValueError`.
+            Response variables for the entire dataset. If `None`, subsequent calls to
+            training_XTY and training_XTX_XTY will raise a `ValueError`.
         """
         self.X_total = self._init_mat(X)
         self.N, self.K = self.X_total.shape
