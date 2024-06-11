@@ -1,6 +1,6 @@
 # Benchmarks
 
-This README describes how we benchmarked the fast algorithms, implemented in the [`cvmatrix`](https://pypi.org/project/cvmatrix/) package, against the naive algorithms. Both the fast and naive algorithms are described in [[1]](#references). We also describe how you can reproduce the benchmarks on your own machine in [Running your own benchmarks](#running-your-own-benchmarks).
+This README describes how we benchmarked computation of trianing set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ using the fast algorithms implemented in the [`cvmatrix`](https://pypi.org/project/cvmatrix/) package, against the naive algorithms. Both the fast and naive algorithms are described in [[1]](#references). We also describe how you can reproduce the benchmarks on your own machine in [Running your own benchmarks](#running-your-own-benchmarks).
 
 The repository comes with benchmarks on a single thread on an AMD Ryzen 9 5950X using DDR4, 3.2GHz, C16 RAM. These benchmarks generated and saved in `benchmark_results.csv` by executing:
 ```shell
@@ -31,10 +31,16 @@ We benchmarked the fast algorithm using all 16 combinations of `center_X`, `cent
    center_X=center_Y=scale_X=scale_Y=True
    ```
 
-The benchmarks have been visualized in `benchmark.png`, generated with:
+The benchmarks have been visualized in `benchmark_cvmatrix.png` and `benchmark_cvmatrix_vs_naive.png`, generated with:
 ```shell
 python3 plot_benchmark.py
 ```
+
+<p align=center>
+   <img src="./benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmark_cvmatrix.png" width="400" height="400"/>
+   <br>
+   <em> Left: Benchmarking the CVMatrix implementation versus the straight-forward, naive implementation (NaiveCVMatrix) using three common combinations of centering and scaling. Right: Benchmarking the CVMatrix implementation for all possible combinations of centering and scaling. </em>
+</p>
 
 ## Running your own benchmarks
 
@@ -44,7 +50,7 @@ To plot the benchmarks, you need to install `pandas` and `matplotlib`:
 pip3 install pandas matplotlib
 ```
 
-Execute the following commands to generate the benchmark. Note, that this starts with a deletion of the provided benchmarks in `benchmark_results.csv` and ends with an overwrite of the provided plots in `benchmark.png`.
+Execute the following commands to generate the benchmark. Note, that this starts with a deletion of the provided benchmarks in `benchmark_results.csv` and ends with an overwrite of the provided plots in `benchmark_cvmatrix.png` and `benchmark_cvmatrix_vs_naive.png`.
 ```shell
 rm benchmark_results.csv
 python3 benchmark.py
