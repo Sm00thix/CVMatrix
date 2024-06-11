@@ -1,6 +1,6 @@
 # Benchmarks
 
-This README describes how we benchmarked computation of trianing set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ using the fast algorithms implemented in the [`cvmatrix`](https://pypi.org/project/cvmatrix/) package, against the naive algorithms. Both the fast and naive algorithms are described in [[1]](#references). We also describe how you can reproduce the benchmarks on your own machine in [Running your own benchmarks](#running-your-own-benchmarks).
+This README describes how we benchmarked computation of trianing set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ using the fast algorithms implemented in the [`cvmatrix`](https://pypi.org/project/cvmatrix/) package, against the naive algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py). Both the fast and naive algorithms are described in [[1]](#references). We also describe how you can reproduce the benchmarks on your own machine in [Running your own benchmarks](#running-your-own-benchmarks).
 
 The repository comes with benchmarks on a single thread on an AMD Ryzen 9 5950X using DDR4, 3.2GHz, C16 RAM. These benchmarks generated and saved in `benchmark_results.csv` by executing:
 ```shell
