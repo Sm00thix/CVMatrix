@@ -11,35 +11,24 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 import os
+import sys
+
+# Add the parent directory of 'CVMatrix' to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Set the number of threads to 1. This must be done before importing numpy.
+os.environ["OMP_NUM_THREADS"] = "1"
+
 from itertools import product
 from timeit import timeit
 from typing import Hashable, Iterable, Union
 
 import numpy as np
 
-import cvmatrix
+from cvmatrix.__init__ import __version__
 from cvmatrix.cvmatrix import CVMatrix
 from tests.naive_cvmatrix import NaiveCVMatrix
 
-
-def set_env_vars():
-    value = 1
-    str_value = str(value)
-    os.environ['OMP_NUM_THREADS'] = str_value # Set number of threads to 1
-    os.environ['OPENBLAS_NUM_THREADS'] = str_value # Set number of threads to 1
-    os.environ['MKL_NUM_THREADS'] = str_value # Set number of threads to 1
-    os.environ['VECLIB_MAXIMUM_THREADS'] = str_value # Set number of threads to 1
-    os.environ['NUMEXPR_NUM_THREADS'] = str_value # Set number of threads to 1
-    os.environ['OPENBLAS_MAIN_FREE'] = str_value # Set number of threads to 1
-    print_env_vars()
-
-def print_env_vars():
-    print("OMP_NUM_THREADS:", os.environ['OMP_NUM_THREADS'])
-    print("OPENBLAS_NUM_THREADS:", os.environ['OPENBLAS_NUM_THREADS'])
-    print("MKL_NUM_THREADS:", os.environ['MKL_NUM_THREADS'])
-    print("VECLIB_MAXIMUM_THREADS:", os.environ['VECLIB_MAXIMUM_THREADS'])
-    print("NUMEXPR_NUM_THREADS:", os.environ['NUMEXPR_NUM_THREADS'])
-    print()
 
 def save_result_to_csv(
         model,
@@ -130,7 +119,6 @@ def execute_algorithm(
         model.training_XTX_XTY(fold)
 
 if __name__ == '__main__':
-    set_env_vars()
     seed = 42 # Seed for reproducibility
     rng = np.random.default_rng(seed=seed)
     N = 100000 # 100k samples
@@ -179,7 +167,7 @@ if __name__ == '__main__':
             scale_X,
             scale_Y,
             time,
-            cvmatrix.__version__
+            __version__
         )
 
         if (center_X == center_Y == scale_X == scale_Y or
@@ -212,5 +200,5 @@ if __name__ == '__main__':
                 scale_X,
                 scale_Y,
                 time,
-                cvmatrix.__version__
+                __version__
             )
