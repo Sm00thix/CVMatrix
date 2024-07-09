@@ -10,7 +10,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/cvmatrix/badge/?version=latest)](https://cvmatrix.readthedocs.io/en/latest/?badge=latest)
 
-[![Build Status](https://github.com/Sm00thix/CVMatrix/actions/workflows/workflow.yml/badge.svg)](https://github.com/Sm00thix/CVMatrix/actions/workflows/workflow.yml)
+[![Tests Status](https://github.com/Sm00thix/CVMatrix/actions/workflows/test_workflow.yml/badge.svg)](https://github.com/Sm00thix/CVMatrix/actions/workflows/test_workflow.yml)
+
+[![Package Status](https://github.com/Sm00thix/CVMatrix/actions/workflows/package_workflow.yml/badge.svg)](https://github.com/Sm00thix/CVMatrix/actions/workflows/package_workflow.yml)
 
 The [`cvmatrix`](https://pypi.org/project/cvmatrix/) package implements the fast algorithms by Engstrøm [[1]](#references) for computation of training set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ in a cross-validation setting. In addition to correctly handling arbitrary row-wise pre-processing, the algorithms allow for and efficiently and correctly handle any combination of column-wise centering and scaling of `X` and `Y` based on training set statistics.
 

@@ -85,6 +85,7 @@ class CVMatrix:
         self.scale_Y = scale_Y
         self.dtype = dtype
         self.copy = copy
+        self.eps = np.finfo(dtype).eps
         self.X_total = None
         self.Y_total = None
         self.N = None
@@ -533,7 +534,7 @@ class CVMatrix:
                 + train_sum_sq_mat
             )
         )
-        mat_train_std[mat_train_std == 0] = 1
+        mat_train_std[np.abs(mat_train_std) <= self.eps] = 1
         return mat_train_std
 
     def _init_mat(self, mat: np.ndarray) -> np.ndarray:
