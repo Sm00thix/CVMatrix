@@ -139,7 +139,7 @@ class NaiveCVMatrix(CVMatrix):
             X_train = X_train - X_train_mean
         if self.scale_X:
             X_train_std = X_train.std(axis=0, ddof=1, keepdims=True)
-            X_train_std[X_train_std == 0] = 1
+            X_train_std[X_train_std <= self.eps] = 1
             X_train = X_train / X_train_std
         if return_XTY:
             Y_train = self.Y_total[training_indices]
@@ -148,7 +148,7 @@ class NaiveCVMatrix(CVMatrix):
                 Y_train = Y_train - Y_train_mean
             if self.scale_Y:
                 Y_train_std = Y_train.std(axis=0, ddof=1, keepdims=True)
-                Y_train_std[Y_train_std == 0] = 1
+                Y_train_std[Y_train_std <= self.eps] = 1
                 Y_train = Y_train / Y_train_std
         if return_XTX and return_XTY:
             return X_train.T @ X_train, X_train.T @ Y_train
