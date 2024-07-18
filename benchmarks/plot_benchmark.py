@@ -217,6 +217,8 @@ def get_combination_to_color_map():
     return combination_to_color_map
 
 if __name__ == '__main__':
+    # Set the font size, legend size, and axis label size
+    plt.rcParams.update({'font.size': 12})
     df = pd.read_csv('benchmark_results.csv')
     combination_to_color_map = get_combination_to_color_map()
     plot_cvmatrix_vs_naive(df, combination_to_color_map)
