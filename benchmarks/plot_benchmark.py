@@ -60,7 +60,7 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
             fast_times.append(fast_time)
             naive_times.append(naive_time)
             Ps.append(P)
-        label = "CVMatrix, " + ', '.join([f"{k}={v}" for k, v in combination.items()])
+        label = "Fast (CVMatrix), " + ', '.join([f"{k}={v}" for k, v in combination.items()])
         ax.plot(
             Ps,
             fast_times,
@@ -69,7 +69,7 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
             linestyle='dashed',
             label=label
         )
-        label = "NaiveCVMatrix, " + ', '.join(
+        label = "Baseline, " + ', '.join(
                 [f"{k}={v}" for k, v in combination.items()]
             )
         ax.plot(
@@ -89,7 +89,7 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
         )
     cvmatrix_version = df['version'].unique()[0]
     version_text = f'CVMatrix version: {cvmatrix_version}'
-    ax.text(1, 200000, version_text, fontsize=9, ha='center', va='center')
+    ax.text(1, 230000, version_text, fontsize=9, ha='center', va='center')
     ax.set_xscale('log')
     ax.set_yscale('log')
     current_x_ticks, current_x_labels = plt.xticks()
@@ -106,7 +106,7 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
     new_x_labels = new_x_labels[start_idx:stop_idx]
     ax.set_xticks(new_x_ticks)
     ax.set_xticklabels(new_x_labels)
-    ax.set_title(f'CVMatrix vs NaiveCVMatrix (N={N:,}, K={K}, M={M})')
+    ax.set_title(f'Fast (CVMatrix) vs. Baseline Cross-Validation (N={N:,}, K={K}, M={M})')
     ax.set_xlabel('P (cross-validation folds)')
     ax.set_ylabel('Time (s)')
     ax.legend(loc='upper left')
@@ -184,7 +184,7 @@ def plot_cvmatrix(df, combination_to_color_map):
     new_x_labels = new_x_labels[start_idx:stop_idx]
     ax.set_xticks(new_x_ticks)
     ax.set_xticklabels(new_x_labels)
-    ax.set_title(f'CVMatrix (N={N:,}, K={K}, M={M})')
+    ax.set_title(f'Fast (CVMatrix) Cross-Validation (N={N:,}, K={K}, M={M})')
     ax.set_xlabel('P (cross-validation folds)')
     ax.set_ylabel('Time (s)')
     ax.legend(loc='upper left')

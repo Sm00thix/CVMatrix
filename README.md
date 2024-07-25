@@ -14,7 +14,7 @@
 
 [![Package Status](https://github.com/Sm00thix/CVMatrix/actions/workflows/package_workflow.yml/badge.svg)](https://github.com/Sm00thix/CVMatrix/actions/workflows/package_workflow.yml)
 
-The [`cvmatrix`](https://pypi.org/project/cvmatrix/) package implements the fast algorithms by Engstrøm [[1]](#references) for computation of training set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ in a cross-validation setting. In addition to correctly handling arbitrary row-wise pre-processing, the algorithms allow for and efficiently and correctly handle any combination of column-wise centering and scaling of `X` and `Y` based on training set statistics.
+The [`cvmatrix`](https://pypi.org/project/cvmatrix/) package implements the fast cross-validation algorithms by Engstrøm [[1]](#references) for computation of training set $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ and $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ in a cross-validation setting. In addition to correctly handling arbitrary row-wise pre-processing, the algorithms allow for and efficiently and correctly handle any combination of column-wise centering and scaling of `X` and `Y` based on training set statistical moments.
 
 For an implementation of the fast cross-validation algorithms combined with Improved Kernel Partial Least Squares [[2]](#references), see the Python package [`ikpls`](https://pypi.org/project/ikpls/).
 
@@ -72,12 +72,12 @@ In [examples](https://github.com/Sm00thix/CVMatrix/tree/main/examples), you will
 
 ## Benchmarks
 
-In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks), we have benchmarked the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the straight-forward, naive algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py).
+In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks), we have benchmarked cross-validation of the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the baseline algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py).
 
 <p align=center>
    <img src="./benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
    <br>
-   <em> <strong>Left:</strong> Benchmarking the CVMatrix implementation versus the straight-forward, naive implementation (NaiveCVMatrix) using three common combinations of centering and scaling. <strong>Right:</strong> Benchmarking the CVMatrix implementation for all possible combinations of centering and scaling. </em>
+   <em> <strong>Left:</strong> Benchmarking cross-validation with the CVMatrix implementation versus the baseline implementation using three common combinations of (column-wise) centering and scaling. <strong>Right:</strong> Benchmarking cross-validation with the CVMatrix implementation for all possible combinations of (column-wise) centering and scaling. </em>
 </p>
 
 ## Contribute
