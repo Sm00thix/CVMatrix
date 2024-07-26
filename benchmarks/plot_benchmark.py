@@ -85,11 +85,11 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
     for j, line in enumerate(lines):
         ax.axhline(y=line, color='k', linestyle='--', linewidth=1)
         ax.text(
-            300000, line, f"1 {line_names[j]}", fontsize=10, ha='center', va='center'
+            310000, line, f"1 {line_names[j]}", fontsize=10, ha='center', va='center'
         )
     cvmatrix_version = df['version'].unique()[0]
     version_text = f'CVMatrix version: {cvmatrix_version}'
-    ax.text(1, 230000, version_text, fontsize=9, ha='center', va='center')
+    ax.text(1, 330000, version_text, fontsize=9, ha='center', va='center')
     ax.set_xscale('log')
     ax.set_yscale('log')
     current_x_ticks, current_x_labels = plt.xticks()
@@ -106,10 +106,11 @@ def plot_cvmatrix_vs_naive(df, combination_to_color_map):
     new_x_labels = new_x_labels[start_idx:stop_idx]
     ax.set_xticks(new_x_ticks)
     ax.set_xticklabels(new_x_labels)
-    ax.set_title(f'Fast (CVMatrix) vs. Baseline Cross-Validation (N={N:,}, K={K}, M={M})')
+    ax.set_title(f'Fast (CVMatrix) vs. Baseline Cross-Validation\n(N={N:,}, K={K}, M={M})')
     ax.set_xlabel('P (cross-validation folds)')
     ax.set_ylabel('Time (s)')
-    ax.legend(loc='upper left')
+    fig.set_size_inches(8.27, 5.83)
+    ax.legend(loc='upper left', fontsize='x-small')
     plt.tight_layout()
     plt.savefig('benchmark_cvmatrix_vs_naive.png')
     plt.clf()
@@ -158,16 +159,16 @@ def plot_cvmatrix(df, combination_to_color_map):
             linestyle='dashed',
             label=label
         )
-    lines = [1, 60]
-    line_names = ['Second', 'Minute']
+    lines = [1, 60, 3600, 86400]
+    line_names = ['Second', 'Minute', 'Hour', 'Day']
     for j, line in enumerate(lines):
         ax.axhline(y=line, color='k', linestyle='--', linewidth=1)
         ax.text(
-            300000,line, f"1 {line_names[j]}", fontsize=10, ha='center', va='center'
+            310000,line, f"1 {line_names[j]}", fontsize=10, ha='center', va='center'
         )
     cvmatrix_version = df['version'].unique()[0]
     version_text = f'CVMatrix version: {cvmatrix_version}'
-    ax.text(1, 125, version_text, fontsize=9, ha='center', va='center')
+    ax.text(1, 330000, version_text, fontsize=9, ha='center', va='center')
     ax.set_xscale('log')
     ax.set_yscale('log')
     current_x_ticks, current_x_labels = plt.xticks()
@@ -184,10 +185,11 @@ def plot_cvmatrix(df, combination_to_color_map):
     new_x_labels = new_x_labels[start_idx:stop_idx]
     ax.set_xticks(new_x_ticks)
     ax.set_xticklabels(new_x_labels)
-    ax.set_title(f'Fast (CVMatrix) Cross-Validation (N={N:,}, K={K}, M={M})')
+    ax.set_title(f'Fast (CVMatrix) Cross-Validation\n(N={N:,}, K={K}, M={M})')
     ax.set_xlabel('P (cross-validation folds)')
     ax.set_ylabel('Time (s)')
-    ax.legend(loc='upper left')
+    fig.set_size_inches(8.27, 5.83)
+    ax.legend(loc='upper left', fontsize='x-small')
     plt.tight_layout()
     plt.savefig('benchmark_cvmatrix.png')
     plt.clf()

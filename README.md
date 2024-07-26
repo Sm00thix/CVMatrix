@@ -77,7 +77,7 @@ In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks), we h
 <p align=center>
    <img src="./benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
    <br>
-   <em> <strong>Left:</strong> Benchmarking cross-validation with the CVMatrix implementation versus the baseline implementation using three common combinations of (column-wise) centering and scaling. <strong>Right:</strong> Benchmarking cross-validation with the CVMatrix implementation for all possible combinations of (column-wise) centering and scaling. </em>
+   <em> <strong>Top:</strong> Benchmarking cross-validation with the CVMatrix implementation versus the baseline implementation using three common combinations of (column-wise) centering and scaling. <strong>Bottom:</strong> Benchmarking cross-validation with the CVMatrix implementation for all possible combinations of (column-wise) centering and scaling. </em>
 </p>
 
 ## Contribute
