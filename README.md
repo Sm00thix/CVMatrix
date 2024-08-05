@@ -75,9 +75,9 @@ In [examples](https://github.com/Sm00thix/CVMatrix/tree/main/examples), you will
 In [benchmarks](https://github.com/Sm00thix/CVMatrix/tree/main/benchmarks), we have benchmarked cross-validation of the fast algorithms in [`cvmatrix`](https://pypi.org/project/cvmatrix/) against the baseline algorithms implemented in [NaiveCVMatrix](https://github.com/Sm00thix/CVMatrix/tree/main/tests/naive_cvmatrix.py).
 
 <p align=center>
-   <img src="./benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="./benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
+   <img src="https://github.com/Sm00thix/CVMatrix/blob/main/benchmarks/benchmark_cvmatrix_vs_naive.png" width="400" height="400" /> <img src="https://github.com/Sm00thix/CVMatrix/blob/main/benchmarks/benchmark_cvmatrix.png" width="400" height="400"/>
    <br>
-   <em> <strong>Left:</strong> Benchmarking cross-validation with the CVMatrix implementation versus the baseline implementation using three common combinations of (column-wise) centering and scaling. <strong>Right:</strong> Benchmarking cross-validation with the CVMatrix implementation for all possible combinations of (column-wise) centering and scaling. </em>
+   <em> <strong>Left:</strong> Benchmarking cross-validation with the CVMatrix implementation versus the baseline implementation using three common combinations of (column-wise) centering and scaling. <strong>Right:</strong> Benchmarking cross-validation with the CVMatrix implementation for all possible combinations of (column-wise) centering and scaling. Here, most of the graphs lie on top of eachother. In general, no preprocessing is faster than centering which, in turn, is faster than scaling. </em>
 </p>
 
 ## Contribute
