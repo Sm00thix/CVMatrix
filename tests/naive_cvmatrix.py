@@ -10,7 +10,8 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 
-from typing import Hashable, Iterable, Union
+from collections.abc import Hashable
+from typing import Iterable, Union
 
 import numpy as np
 from numpy import typing as npt

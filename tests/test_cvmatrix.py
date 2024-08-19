@@ -16,8 +16,9 @@ E-mail: ole.e@di.ku.dk
 """
 
 import sys
+from collections.abc import Hashable
 from itertools import product
-from typing import Hashable, Iterable, Union
+from typing import Iterable, Union
 
 import numpy as np
 import pytest
